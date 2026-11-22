@@ -1,0 +1,5 @@
+U2-NetP is the lightweight U2-Net model by Xuebin Qin and collaborators.
+Original project: https://github.com/NathanUA/U-2-Net
+Model license: Apache License 2.0 (see U2NET-LICENSE.txt).
+ONNX export distributed by the rembg project:
+https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx
