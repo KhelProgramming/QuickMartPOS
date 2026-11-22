@@ -4,14 +4,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 final class ProductPhoto extends JPanel {
     private static final int PHOTO_SIZE = 384;
-    private static final Path MODEL = Path.of(System.getProperty("user.home"), ".quickmart", "u2netp.onnx");
     private final JLabel thumbnail = new JLabel("No photo", SwingConstants.CENTER);
     private final JButton remove = new JButton("Remove");
     private byte[] jpeg;
@@ -101,10 +99,7 @@ final class ProductPhoto extends JPanel {
                 BufferedImage source = input.read();
                 BufferedImage original = onWhiteCanvas(source);
                 try {
-                    if (!Files.isRegularFile(MODEL)) {
-                        return new ProcessedPhoto(original, null, "For background removal, install u2netp.onnx in .quickmart.");
-                    }
-                    BufferedImage foreground = PhotoBackground.remove(source, MODEL);
+                    BufferedImage foreground = PhotoBackground.remove(source);
                     return new ProcessedPhoto(original, foreground, "Preview the white-background result.");
                 } catch (Exception | LinkageError ex) {
                     return new ProcessedPhoto(original, null, "Background removal could not finish. You can keep the original.");

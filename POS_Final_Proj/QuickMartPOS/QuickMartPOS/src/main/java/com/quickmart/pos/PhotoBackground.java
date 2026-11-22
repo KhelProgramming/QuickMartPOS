@@ -7,19 +7,19 @@ import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.nio.file.Path;
 import java.util.Map;
 
 final class PhotoBackground {
     private static final int MODEL_SIZE = 320;
+    private static final String MODEL_RESOURCE = "/models/u2netp.onnx";
 
     private PhotoBackground() {}
 
-    static BufferedImage remove(BufferedImage source, Path model) throws Exception {
-        return extractProduct(source, predictMask(source, model));
+    static BufferedImage remove(BufferedImage source) throws Exception {
+        return extractProduct(source, predictMask(source));
     }
 
-    private static float[][] predictMask(BufferedImage source, Path model) throws Exception {
+    private static float[][] predictMask(BufferedImage source) throws Exception {
         BufferedImage sample = ProductPhoto.resize(source, MODEL_SIZE, MODEL_SIZE, BufferedImage.TYPE_INT_RGB);
         int pixels = MODEL_SIZE * MODEL_SIZE;
         int[] rgb = sample.getRGB(0, 0, MODEL_SIZE, MODEL_SIZE, null, 0, MODEL_SIZE);
@@ -38,9 +38,14 @@ final class PhotoBackground {
                 values[channel * pixels + i] = (value - mean[channel]) / std[channel];
             }
         }
+        byte[] model;
+        try (var input = PhotoBackground.class.getResourceAsStream(MODEL_RESOURCE)) {
+            if (input == null) throw new IOException("Bundled model is missing: " + MODEL_RESOURCE);
+            model = input.readAllBytes();
+        }
         OrtEnvironment environment = OrtEnvironment.getEnvironment();
         try (OrtSession.SessionOptions options = new OrtSession.SessionOptions();
-             OrtSession session = environment.createSession(model.toString(), options);
+             OrtSession session = environment.createSession(model, options);
              OnnxTensor tensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(values),
                      new long[]{1, 3, MODEL_SIZE, MODEL_SIZE});
              OrtSession.Result result = session.run(Map.of(session.getInputNames().iterator().next(), tensor))) {
